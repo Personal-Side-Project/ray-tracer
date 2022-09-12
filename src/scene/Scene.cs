@@ -80,6 +80,10 @@ namespace RayTracer
                 {
                     double locY = (y + 0.5) / outputImage.Height;
                     double cameraY = ratioBool ? ((1 - locY * 2) * scale / aspectRatio) : ((1 - locY * 2) * scale);
+                    if (angle > 0)
+                    {
+                        cameraY *= angle;
+                    }
 
                     if (AA == 1)
                     {
@@ -291,6 +295,18 @@ namespace RayTracer
                     newRay = new Ray(newOri, newDir);
                     reflectColor = Tracer(newRay, recurseTime + 1);
                     newColor = refractColor * (1 - reflectRatio) + reflectColor * (reflectRatio);
+                    return newColor;
+                case RayTracer.Material.MaterialType.Emissive:
+                    foreach (PointLight light in lights)
+                    {
+                        if (!shadow(light, curH, curE))
+                        {
+                            // C = (N dot L) * Cm * Cl
+                            Vector3 N = curH.Normal;
+                            Vector3 L = (light.Position - curH.Position).Normalized();
+                            newColor += curE.Material.Color * N.Dot(L);
+                        }
+                    }
                     return newColor;
             }
 
