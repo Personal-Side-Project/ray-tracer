@@ -32,14 +32,13 @@ namespace RayTracer
         /// <returns>Hit data (or null if no intersection)</returns>
         public RayHit Intersect(Ray ray)
         {
-            const double EPSILON = 1E-6;
             Vector3 D = ray.Direction, O = ray.Origin, P0 = (O - v0);
             Vector3 edge1 = (v1 - v0), edge2 = (v2 - v0);
             Vector3 normal = edge1.Cross(edge2).Normalized(), detVec = D.Cross(edge2), Vvec = P0.Cross(edge1);
 
             // Boundary intersection tests
             double det = edge1.Dot(detVec);
-            if (Math.Abs(det) < EPSILON) return null;
+            if (Math.Abs(det) < Double.Epsilon) return null;
 
             double u = P0.Dot(detVec) / det, v = Vvec.Dot(D) / det;
             if (u <= 0 | u > 1) return null;
@@ -47,10 +46,10 @@ namespace RayTracer
 
             // output the ray
             double t = edge2.Dot(P0.Cross(edge1)) / det;
-            if (t < EPSILON) return null;
+            if (t < Double.Epsilon) return null;
 
             Vector3 P = (O + t * D);
-            return new RayHit(P, normal, (P - O), material);
+            return new RayHit(P, normal, D, material);
         }
 
         /// <summary>

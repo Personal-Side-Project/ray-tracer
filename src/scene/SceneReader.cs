@@ -330,7 +330,6 @@ namespace RayTracer
         private void ParseSphere(Line line)
         {
             string identifier = line.ReadString();
-            
             if (this.entities.ContainsKey(identifier))
             {
                 throw new ParseException($"Entity identifier '{identifier}' already in use.", line.LineNumber);

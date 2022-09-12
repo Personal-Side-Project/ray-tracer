@@ -11,22 +11,13 @@ namespace RayTracer
         private Vector3 position;
         private Vector3 normal;
         private Vector3 incident;
-        private Vector3 reflection;
-        private Vector3 refraction;
-        private Vector3 transmission;
+
 
         public RayHit(Vector3 position, Vector3 normal, Vector3 incident, Material material)
         {
             this.position = position;
             this.normal = normal;
             this.incident = incident;
-
-            // Compute the reflection
-            this.reflection = incident - 2 * incident.Dot(normal) * normal;
-
-            // compute the transmission
-            this.transmission = new Vector3();
-            this.refraction = new Vector3();
         }
 
         // You may wish to write methods to compute other vectors, 
@@ -38,14 +29,5 @@ namespace RayTracer
 
         public Vector3 Incident { get { return this.incident; } }
 
-
-
-        public Vector3 Reflection { get { return this.reflection; } }
-
-        public Vector3 Refraction { get { return this.refraction; } }
-
-
-
-        public Vector3 Transmission { get { return this.transmission; } }
     }
 }

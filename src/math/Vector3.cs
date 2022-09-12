@@ -40,7 +40,12 @@ namespace RayTracer
         /// <returns>Length of the vector squared</returns>
         public double LengthSq()
         {
-            return x * x + y * y + z * z;
+            double newX = Math.Pow(this.x, 2);
+            double newY = Math.Pow(this.y, 2);
+            double newZ = Math.Pow(this.z, 2);
+            double sum = newX + newY + newZ;
+            
+            return  sum;
         }
 
         /// <summary>
@@ -48,8 +53,8 @@ namespace RayTracer
         /// </summary>
         /// <returns>Length of the vector</returns>
         public double Length()
-        {      
-            return Math.Sqrt(x * x + y * y + z * z);
+        {
+            return Math.Sqrt(LengthSq());
         }
 
         /// <summary>
@@ -57,8 +62,12 @@ namespace RayTracer
         /// </summary>
         /// <returns>Normalized vector</returns>
         public Vector3 Normalized()
-        {   
-            return (new Vector3(x , y , z)) / Length();
+        {
+            double newX = this.x / Length();
+            double newY = this.y / Length();
+            double newZ = this.z / Length();
+            
+            return new Vector3(newX, newY, newZ);
         }
 
         /// <summary>
@@ -68,8 +77,12 @@ namespace RayTracer
         /// <returns>Dot product result</returns>
         public double Dot(Vector3 with)
         {
-
-            return (with.X * x + with.Y * y + with.Z * z);
+            double diffX = this.x * with.x;
+            double diffY = this.y * with.y;
+            double diffZ = this.z * with.z;
+            double dot = diffX + diffY + diffZ;
+            
+            return dot;
         }
 
         /// <summary>
@@ -78,8 +91,12 @@ namespace RayTracer
         /// <param name="with">Vector to cross product with</param>
         /// <returns>Cross product result</returns>
         public Vector3 Cross(Vector3 with)
-        {   
-            return new Vector3((y * with.Z - z * with.Y), (z * with.X - x * with.Z), (x * with.Y - y * with.X));
+        {
+            double newX = this.y * with.z - this.z * with.y;
+            double newY = this.z * with.x - this.x * with.z;
+            double newZ = this.x * with.y - this.y * with.x;
+
+            return new Vector3(newX, newY, newZ);
         }
 
         /// <summary>
@@ -90,7 +107,11 @@ namespace RayTracer
         /// <returns>Summed vector</returns>
         public static Vector3 operator +(Vector3 a, Vector3 b)
         {
-            return new Vector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+            double newX = a.x + b.x;
+            double newY = a.y + b.y;
+            double newZ = a.z + b.z;
+            
+            return new Vector3(newX, newY, newZ);
         }
 
         /// <summary>
@@ -100,7 +121,11 @@ namespace RayTracer
         /// <returns>Negated vector</returns>
         public static Vector3 operator -(Vector3 a)
         {
-            return new Vector3(-(a.X), -(a.Y), -(a.Z));
+            double newX = -a.x;
+            double newY = -a.y;
+            double newZ = -a.z;
+            
+            return new Vector3(newX, newY, newZ);
         }
 
         /// <summary>
@@ -111,7 +136,11 @@ namespace RayTracer
         /// <returns>Subtracted vector</returns>
         public static Vector3 operator -(Vector3 a, Vector3 b)
         {
-            return new Vector3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+            double newX = a.x - b.x;
+            double newY = a.y - b.y;
+            double newZ = a.z - b.z;
+            
+            return new Vector3(newX, newY, newZ);
         }
 
         /// <summary>
@@ -122,7 +151,11 @@ namespace RayTracer
         /// <returns>Multiplied vector</returns>
         public static Vector3 operator *(Vector3 a, double b)
         {
-            return new Vector3((a.X), (a.Y), (a.Z)) * b;
+            double newX = a.x * b;
+            double newY = a.y * b;
+            double newZ = a.z * b;
+            
+            return new Vector3(newX, newY, newZ);
         }
 
         /// <summary>
@@ -133,7 +166,11 @@ namespace RayTracer
         /// <returns>Multiplied vector</returns>
         public static Vector3 operator *(double b, Vector3 a)
         {
-            return new Vector3((a.X) * b, (a.Y) * b, (a.Z) * b);
+            double newX = a.x * b;
+            double newY = a.y * b;
+            double newZ = a.z * b;
+            
+            return new Vector3(newX, newY, newZ);
         }
 
         /// <summary>
@@ -144,7 +181,11 @@ namespace RayTracer
         /// <returns>Divided vector</returns>
         public static Vector3 operator /(Vector3 a, double b)
         {
-            return new Vector3((a.X) / b, (a.Y) / b, (a.Z) / b);
+            double newX = a.x / b;
+            double newY = a.y / b;
+            double newZ = a.z / b;
+            
+            return new Vector3(newX, newY, newZ);
         }
 
         /// <summary>

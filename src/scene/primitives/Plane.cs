@@ -30,16 +30,16 @@ namespace RayTracer
         /// <param name="ray">Ray to check</param>
         /// <returns>Hit data (or null if no intersection)</returns>
         public RayHit Intersect(Ray ray)
-        {
-            const double EPSILON = 1e-6;
+        {   
             Vector3 D = ray.Direction, O = ray.Origin;
+            if (Math.Abs(D.Dot(normal)) < Double.Epsilon) return null;
             double DN = D.Dot(normal);
-            if (DN < EPSILON)
+            if (DN < Double.Epsilon)
             {
                 double t = (center - O).Dot(normal) / DN;
-                if (t < EPSILON) return null;
+                if (t <= 0) return null;
                 Vector3 P = O + t * D;
-                return new RayHit(P, normal, (P - O), material);
+                return new RayHit(P, normal, D, material);
             }
             return null;
         }

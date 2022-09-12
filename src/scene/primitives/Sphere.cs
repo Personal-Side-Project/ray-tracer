@@ -34,23 +34,25 @@ namespace RayTracer
             // (d.d) * t^2 + 2 * d.(e - c) * t + (e - c).(e - c) - R^2 = 0
             // => a * t^2 + b * t + c = 0
 
-            const double EPSILON = 1e-6;
             Vector3 D = ray.Direction, O = ray.Origin, oc = O - center;
             double a = D.LengthSq(), b = 2 * (D.Dot(oc)), c = oc.LengthSq() - radius * radius;
             double d = b * b - 4 * a * c;
 
-            if (d < EPSILON)
+            if (d < 0) return null;
+            double t2 = (-b - Math.Sqrt(d)) / 2 * a;
+            double t;
+            if (t2 > 0)
             {
-                return null;
+                t = t2;
             }
             else
             {
-                double t1 = (-b + Math.Sqrt(d)) / 2 * a, t2 = (-b - Math.Sqrt(d)) / 2 * a;
-                double t = Math.Min(t1, t2);
-                Vector3 P = (O + t * D);
-                Vector3 normal = (P - center).Normalized();
-                return new RayHit(P, normal, (P - O), material);
+                t = (-b + Math.Sqrt(d)) / 2 * a;
+                if (t < 0) return null;
             }
+            Vector3 P = (O + t * D);
+            Vector3 normal = (P - center).Normalized();
+            return new RayHit(P, normal, D, material);
         }
 
         /// <summary>
