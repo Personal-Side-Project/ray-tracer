@@ -55,6 +55,7 @@ namespace RayTracer
             Ray ray;
             Color pixelColor = new Color(0, 0, 0);
             Vector3 ori = options.CameraPosition;
+            int recurseTime = 0;
 
             /* Options */
             int AA = options.AAMultiplier;// If need Anti-aliasing multiplier
@@ -84,7 +85,7 @@ namespace RayTracer
                     {
                         Vector3 rayDirection = (new Vector3(cameraX, cameraY, 0) + axis).Normalized();
                         ray = new Ray(ori, rayDirection);
-                        pixelColor = Tracer(ray);
+                        pixelColor = Tracer(ray, recurseTime);
                     }
                     else
                     {
@@ -99,7 +100,7 @@ namespace RayTracer
                                 double yMove = (j * yDir) / (outputImage.Height * AA * 2);
                                 Vector3 rayDirection = (new Vector3(cameraX + xMove, cameraY + yMove, 0) + axis).Normalized();
                                 ray = new Ray(ori, rayDirection);
-                                pixelColor += Tracer(ray);
+                                pixelColor += Tracer(ray, recurseTime);
                             }
                         }
                         pixelColor /= (AA * AA);
@@ -112,18 +113,19 @@ namespace RayTracer
             }
         }
 
-        private Color Tracer(Ray ray)
+        private Color Tracer(Ray ray, int recurseTime)
         {
-            // Ray newRay;
-            // Vector3 newOri, newDir;
+            Ray newRay;
+            Vector3 newOri, newDir;
             Color newColor = new Color(0, 0, 0), reflectColor = new Color(0, 0, 0), refractColor = new Color(0, 0, 0);
             double far = Double.PositiveInfinity;
             SceneEntity curE = null;
             RayHit curH = null;
-            // double reflectRatio = 0;
+            double reflectRatio = 0;
             // Stage 3 option B
-            // Boolean ambient = options.AmbientLightingEnabled;
+            Boolean ambient = options.AmbientLightingEnabled;
 
+            if (recurseTime == 4) return newColor;
             // Loop all entities and find the closest hit object.
             foreach (SceneEntity entity in this.entities)
             {
@@ -148,35 +150,149 @@ namespace RayTracer
             Vector3 offset = curH.Normal * 0.0000000001;
 
             // Diffusion - Ambient Light
-            // if (ambient && curE.Material.Type == Material.MaterialType.Diffuse)
-            // {
-            //     return newColor;
-            // }
-
-            if (curE.Material.Type == Material.MaterialType.Diffuse)
+            if (ambient && curE.Material.Type == Material.MaterialType.Diffuse)
             {
+                Color directLight = new Color(0, 0, 0);
+                Color inDirectLight = new Color(0, 0, 0);
+                Vector3 L;
+                Vector3 N;
+                Vector3 Nt;
+                Vector3 Nb;
+
+                // Compute direct illumination.
                 foreach (PointLight light in lights)
                 {
                     if (!shadow(light, curH, curE))
                     {
                         // C = (N dot L) * Cm * Cl
-                        Vector3 N = curH.Normal;
-                        Vector3 L = (light.Position - curH.Position).Normalized();
-                        newColor += curE.Material.Color * light.Color * N.Dot(L);
+                        N = curH.Normal;
+                        L = (light.Position - curH.Position).Normalized();
+                        directLight += curE.Material.Color * light.Color * N.Dot(L);
                     }
                 }
+
+                // Compute indirect illumination.
+                // Compute a rotation matrix.
+                var rand = new Random();
+                int sampleSize = 8;
+
+                // Create coordinate system.
+                N = curH.Normal;
+
+                if (Math.Abs(N.X) > Math.Abs(N.Y))
+                {
+                    Nt = new Vector3(N.Z, 0, -N.X) / Math.Sqrt(N.X * N.X + N.Z * N.Z);
+                }
+                else
+                {
+                    Nt = new Vector3(0, -N.Z, N.Y) / Math.Sqrt(N.Y * N.Y + N.Z * N.Z);
+                }
+                Nt = Nt.Normalized();
+                Nb = N.Cross(Nt).Normalized();
+
+                double pdf = 1 / (2 * Math.PI);
+
+                for (int i = 0; i < sampleSize; i++)
+                {
+                    double r1 = rand.NextDouble();
+                    double r2 = rand.NextDouble();
+                    Vector3 sample = uniformSampleHemisphere(r1, r2);
+                    Vector3 sampleWorld = new Vector3(
+                    sample.X * Nb.X + sample.Y * N.X + sample.Z * Nt.X,
+                    sample.X * Nb.Y + sample.Y * N.Y + sample.Z * Nt.Y,
+                    sample.X * Nb.Z + sample.Y * N.Z + sample.Z * Nt.Z);
+
+                    newOri = outside ? curH.Position + offset : curH.Position - offset;
+                    newDir = sampleWorld.Normalized();
+                    newRay = new Ray(newOri, newDir);
+                    Color sampleColor = Tracer(newRay, recurseTime + 1) / pdf;
+                    inDirectLight += sampleColor;
+                }
+
+                inDirectLight /= sampleSize;
+
+                newColor = (directLight + inDirectLight) * curE.Material.Color / Math.PI;
+
                 return newColor;
             }
 
+            switch (curE.Material.Type)
+            {
+                case RayTracer.Material.MaterialType.Diffuse:
+                    foreach (PointLight light in lights)
+                    {
+                        if (!shadow(light, curH, curE))
+                        {
+                            // C = (N dot L) * Cm * Cl
+                            Vector3 N = curH.Normal;
+                            Vector3 L = (light.Position - curH.Position).Normalized();
+                            newColor += curE.Material.Color * light.Color * N.Dot(L);
+                        }
+                    }
+                    return newColor;
+                case RayTracer.Material.MaterialType.Reflective:
+                    newOri = outside ? curH.Position + offset : curH.Position - offset;
+                    // R = I − 2 * (N dot I) * N
+                    newDir = (curH.Incident - 2 * (curH.Normal.Dot(curH.Incident)) * curH.Normal).Normalized();
+                    newRay = new Ray(newOri, newDir);
+                    newColor = Tracer(newRay, recurseTime + 1);
+                    return newColor;
 
-            // switch (curE.Material.Type)
-            // {
-            //     case RayTracer.Material.MaterialType.Reflective:
-            //         break;
+                case RayTracer.Material.MaterialType.Refractive:
+                    // The Fresnel effect with reflective ray.                        
+                    // Fresnel ratio
+                    Vector3 n = curH.Normal;
+                    double cosi = Math.Clamp(curH.Incident.Dot(n), -1, 1);
+                    double etai = 1;
+                    double etat = curE.Material.RefractiveIndex;
 
-            //     case RayTracer.Material.MaterialType.Refractive:
-            //         break;
-            // }
+                    // outside the surface
+                    if (cosi < 0)
+                    {
+                        cosi = -cosi;
+                    }
+                    else
+                    {
+                        double temp = etai;
+                        etai = etat;
+                        etat = temp;
+                        n = -curH.Normal;
+                    }
+
+                    double eta = etai / etat;
+                    double k = 1 - eta * eta * (1 - cosi * cosi);
+                    double sint = etai / etat * Math.Sqrt(Math.Max(0, 1 - cosi * cosi));
+
+                    if (sint >= 1)
+                    {
+                        reflectRatio = 1;
+                    }
+                    else
+                    {
+                        cosi = Math.Abs(cosi);
+                        double cost = Math.Sqrt(Math.Max(0, 1 - sint * sint));
+                        double rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+                        double rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+                        reflectRatio = (rs * rs + rp * rp) / 2;
+                    }
+
+                    if (reflectRatio < 1)
+                    {
+                        // Refractive ray.
+                        newOri = outside ? curH.Position - offset : curH.Position + offset;
+                        newDir = (eta * curH.Incident + (eta * cosi - Math.Sqrt(k)) * n).Normalized();
+                        newRay = new Ray(newOri, newDir);
+                        refractColor = Tracer(newRay, recurseTime + 1);
+                    }
+
+                    // Reflective ray.
+                    newOri = outside ? curH.Position + offset : curH.Position - offset;
+                    newDir = (curH.Incident - 2 * (curH.Normal.Dot(curH.Incident)) * curH.Normal).Normalized();
+                    newRay = new Ray(newOri, newDir);
+                    reflectColor = Tracer(newRay, recurseTime + 1);
+                    newColor = refractColor * (1 - reflectRatio) + reflectColor * (reflectRatio);
+                    return newColor;
+            }
 
 
             return newColor;
@@ -214,6 +330,15 @@ namespace RayTracer
             if (color.B < 0) color = new Color(color.R, color.G, 0);
 
             return color;
+        }
+
+        private Vector3 uniformSampleHemisphere(double r1, double r2)
+        {
+            double sinTheta = Math.Sqrt(1 - r1 * r1);
+            double phi = 2 * Math.PI * r2;
+            double x = sinTheta * Math.Cos(phi);
+            double z = sinTheta * Math.Sin(phi);
+            return new Vector3(x, r1, z);
         }
 
     }

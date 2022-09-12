@@ -4,9 +4,7 @@ This is your README.md... you should write anything relevant to your implementat
 Please ensure your student details are specified below (*exactly* as on UniMelb records):
 
 **Name:** Jeremy(Fu-Sheng) Huang\
-**Student Number:** 1046432 \
 **Username:** FuShengK \
-**Email:** fushengh@student.unimelb.edu.au
 
 ## Completed stages
 
@@ -25,20 +23,20 @@ Tick the stages bellow that you have completed so we know what to mark (by editi
 
 - [x] Stage 2.1 - Diffuse materials
 - [X] Stage 2.2 - Shadow rays
-- [ ] Stage 2.3 - Reflective materials
-- [ ] Stage 2.4 - Refractive materials
-- [ ] Stage 2.5 - The Fresnel effect
-- [ ] Stage 2.6 - Anti-aliasing
+- [x] Stage 2.3 - Reflective materials
+- [x] Stage 2.4 - Refractive materials
+- [x] Stage 2.5 - The Fresnel effect
+- [x] Stage 2.6 - Anti-aliasing
 
 ##### Stage 3
 
 - [ ] Option A - Emissive materials (+6)
-- [ ] Option B - Ambient lighting/occlusion (+6)
+- [x] Option B - Ambient lighting/occlusion (+6)
 - [ ] Option C - OBJ models (+6)
 - [ ] Option D - Glossy materials (+3)
 - [x] Option E - Custom camera orientation (+3)
 - [ ] Option F - Beer's law (+3)
-- [ ] Option G - Depth of field (+3)
+- [x] Option G - Depth of field (+3)
 
 *Please summarise your approach(es) to stage 3 here.*
 
